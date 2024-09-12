@@ -5,10 +5,10 @@ using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class PlayerCamera : MonoBehaviour
 {
+    public Transform orientation;
+
     float sensX = 150;
     float sensY = 150;
-
-    public Transform orientation; //stores the direction you are facing 
 
     float xRotation;
     float yRotation;
@@ -40,14 +40,17 @@ public class PlayerCamera : MonoBehaviour
         float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensY;
 
 
-        yRotation += mouseX; //add the x input to your y rotation 
+        yRotation += mouseX;
 
-        xRotation -= mouseY; //substract y input from the x rotation
+        xRotation -= mouseY;
 
         xRotation = Mathf.Clamp(xRotation, -90f, 90f); //max camera rotation in the x axis
 
         //rotate cam and orientation
-        transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
+        transform.rotation = Quaternion.Euler(0, yRotation, 0);
         orientation.rotation = Quaternion.Euler(0, yRotation, 0);
+        
+        //rotate cam around player
+
     }
 }
