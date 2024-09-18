@@ -5,27 +5,47 @@ using UnityEngine;
 public class CameraMovement : MonoBehaviour
 {
     [SerializeField] private Camera cam;
-    [SerializeField] private Transform target;
-    private Vector3 previousPos;
+    [SerializeField] private Transform target; 
+    [SerializeField] private Transform orientation; 
+    [SerializeField] private float distanceFromTarget = 4.0f;
+    [SerializeField] private float sensitivity = 80.0f;
+    [SerializeField] private float verticalClampAngle = 80f;
+
+    private float currentX = 0f; 
+    private float currentY = 0f; 
 
     void Start()
     {
-        previousPos = cam.ScreenToViewportPoint(Input.mousePosition);
         Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
-    // Update is called once per frame
+
     void Update()
     {
+        float mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
 
-        Vector3 dir = previousPos - cam.ScreenToViewportPoint(Input.mousePosition);
+        currentX += mouseX;
+        currentY -= mouseY;
 
-        cam.transform.position = target.position; //new Vector3();
+        currentY = Mathf.Clamp(currentY, -verticalClampAngle, verticalClampAngle);
 
-        cam.transform.Rotate(new Vector3(1, 0, 0), dir.y * 180);
-        cam.transform.Rotate(new Vector3(0, 1, 0), dir.x * 180, Space.World);
-        cam.transform.Translate(new Vector3(0, 0, -4));
+        Quaternion rotation = Quaternion.Euler(currentY, currentX, 0);
 
-        previousPos = cam.ScreenToViewportPoint(Input.mousePosition);
+        Vector3 direction = new Vector3(0, 0, -distanceFromTarget);
+        cam.transform.position = target.position + rotation * direction;
+
+        cam.transform.LookAt(target);
+
+ 
+        Vector3 cameraForward = cam.transform.forward;
+        cameraForward.y = 0;
+        orientation.rotation = Quaternion.LookRotation(cameraForward);
+
+        if (orientation != null)
+        {
+            orientation.rotation = Quaternion.LookRotation(cameraForward);
+        }
     }
-
 }
+
