@@ -28,16 +28,17 @@ public class Player : MonoBehaviour
     [SerializeField] Transform groundCheck;
     [SerializeField] float groundDistance = 0.2f;
 
-    public float playerHeight;
-    public LayerMask whatIsGround;
-    bool grounded;
+    [SerializeField] private float playerHeight;
+    [SerializeField] private LayerMask whatIsGround;
+    [SerializeField] private bool grounded;
 
     [Header("Slope Handling")]
-    public float maxSlopeAngle;
-    public RaycastHit slopeHit;
-    public bool exitingSlope;
+    [SerializeField] private float maxSlopeAngle;
+    [SerializeField] private RaycastHit slopeHit;
+    [SerializeField] private bool exitingSlope;
 
-    public Transform orientation;
+    [SerializeField] private Transform orientation;
+    [SerializeField] private GameObject playerModel;
 
     float horizontalInput;
     float verticalInput;
@@ -47,7 +48,7 @@ public class Player : MonoBehaviour
     Rigidbody rb;
     static public bool dialogue = false;
 
-    public MovementState state; // always stores the current state the player is in
+    [SerializeField] private MovementState state; // always stores the current state the player is in
 
     public enum MovementState
     {
@@ -67,11 +68,12 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        // ground check
-        // grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround); //maak  van 0.1f een nieuwe float [SerializeField] float groundDistance = 0.2f; en noem het hier
+        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+        {
+            playerModel.transform.rotation = orientation.rotation;
+        }
+
         grounded = Physics.CheckSphere(groundCheck.position, groundDistance, whatIsGround);
-
-
 
         MyInput();
         SpeedControl();
@@ -95,10 +97,8 @@ public class Player : MonoBehaviour
 
     private void MyInput()
     {
-        // Reset movement direction
         moveDirection = Vector3.zero;
 
-        // Check for movement keys
         if (Input.GetKey(KeyCode.W))
         {
             moveDirection += orientation.forward;
@@ -116,10 +116,8 @@ public class Player : MonoBehaviour
             moveDirection += orientation.right;
         }
 
-        // Normalize the movement direction to ensure consistent speed
         moveDirection.Normalize();
 
-        // When to jump
         if (Input.GetKeyDown(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false;
@@ -230,10 +228,10 @@ public class Player : MonoBehaviour
             Debug.DrawRay(transform.position, Vector3.down, Color.blue); // !!!!!! testing pruposes
 
             float angle = Vector3.Angle(Vector3.up, slopeHit.normal); // calculate how steep the slope is 
-            return angle < maxSlopeAngle && angle != 0; // we want the bool to return true if the angle is smaller then oure maxSlope Angle & not 0
+            return angle < maxSlopeAngle && angle != 0;
         }
 
-        return false; // if the raycast doe not hit annyhing return false 
+        return false;
     }
 
     private Vector3 GetSlopeMoveDirection() // project oure moveDirection with the angle of the slope(if slope 40degrees moveDirection wil be 40degrees) os you wont walk in the slope but on it 
