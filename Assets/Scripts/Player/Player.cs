@@ -48,7 +48,7 @@ public class Player : MonoBehaviour
     Rigidbody rb;
     static public bool dialogue = false;
 
-    [SerializeField] private MovementState state; // always stores the current state the player is in
+    [SerializeField] private MovementState state; 
 
     public enum MovementState
     {
@@ -125,28 +125,27 @@ public class Player : MonoBehaviour
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
-        // State handling based on key inputs
         StateHandler();
     }
 
     private void StateHandler()
     {
         // mode - sprinting
-        if (grounded && Input.GetKey(sprintKey)) // if player is grounded and is presiing sprintkey we want to set the state Walking to Sprinting
+        if (grounded && Input.GetKey(sprintKey)) 
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
         }
 
         //mode - walking 
-        if (grounded) //if player is grounded but not pressing sprint set state to walkSpeed
+        if (grounded) 
         {
             state = MovementState.walking;
             moveSpeed = walkSpeed;
         }
 
         // Mode - Air
-        else // if player is not grounded  and not pressing sprint set state to air
+        else 
         {
             state = MovementState.air;
         }
@@ -191,7 +190,6 @@ public class Player : MonoBehaviour
                 rb.velocity = rb.velocity.normalized * moveSpeed;
         }
 
-        // limiting speed on ground or air
         else
         {
             Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
@@ -209,11 +207,8 @@ public class Player : MonoBehaviour
     {
         exitingSlope = true;
 
-        // reset y velocity
-        //rb.velocity = new Vector3(rb.velocity.x, 5f, rb.velocity.z); // consistant jumping same heigt every time 
-
         rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);     //en dit zorg for inconsistant jumping dus soms spring je hoger dan een andere keer
+        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse); 
     }
     private void ResetJump()
     {
@@ -223,18 +218,18 @@ public class Player : MonoBehaviour
 
     private bool OnSlope()
     {
-        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.2f)) // out slopeHit this stores the object that we hit in the slopeHit Variable
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.2f)) 
         {
-            Debug.DrawRay(transform.position, Vector3.down, Color.blue); // !!!!!! testing pruposes
+            Debug.DrawRay(transform.position, Vector3.down, Color.blue); 
 
-            float angle = Vector3.Angle(Vector3.up, slopeHit.normal); // calculate how steep the slope is 
+            float angle = Vector3.Angle(Vector3.up, slopeHit.normal); 
             return angle < maxSlopeAngle && angle != 0;
         }
 
         return false;
     }
 
-    private Vector3 GetSlopeMoveDirection() // project oure moveDirection with the angle of the slope(if slope 40degrees moveDirection wil be 40degrees) os you wont walk in the slope but on it 
+    private Vector3 GetSlopeMoveDirection()  
     {
         return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
     }
