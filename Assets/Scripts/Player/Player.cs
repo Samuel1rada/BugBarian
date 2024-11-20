@@ -6,8 +6,9 @@ public class Player : MonoBehaviour
 {
     [Header("Movement")]
     private float moveSpeed;
-    private float walkSpeed = 8.0f;
-    private float sprintSpeed = 9.0f;
+    private float walkSpeed = 5.0f;
+    private float sprintSpeed = 8.0f;
+    private float glideSpeed = 5.0f;
     // [SerializeField] float acceleration = 18f;
 
     public float groundDrag;
@@ -21,7 +22,7 @@ public class Player : MonoBehaviour
     [Header("Keybinds")]
     private KeyCode jumpKey = KeyCode.Space;
     private KeyCode sprintKey = KeyCode.LeftShift;
-    private KeyCode crouchKey = KeyCode.LeftControl;
+    private KeyCode glideKey = KeyCode.LeftControl;
 
 
     [Header("Ground Check")]
@@ -47,14 +48,16 @@ public class Player : MonoBehaviour
 
     Rigidbody rb;
     static public bool dialogue = false;
+    public bool disableGravity = false;
+    public bool intrigger = false;
 
-    [SerializeField] private MovementState state; 
+    [SerializeField] public MovementState state; 
 
     public enum MovementState
     {
         walking,
         sprinting,
-        crouching,
+        gliding,
         air
     }
 
@@ -62,7 +65,6 @@ public class Player : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
-
         readyToJump = true;
     }
 
@@ -99,7 +101,7 @@ public class Player : MonoBehaviour
     {
         moveDirection = Vector3.zero;
 
-        if (Input.GetKey(KeyCode.W))
+        if (!intrigger && Input.GetKey(KeyCode.W))
         {
             moveDirection += orientation.forward;
         }
@@ -118,7 +120,7 @@ public class Player : MonoBehaviour
 
         moveDirection.Normalize();
 
-        if (Input.GetKeyDown(jumpKey) && readyToJump && grounded)
+        if ( !intrigger && Input.GetKeyDown(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false;
             Jump();
@@ -131,54 +133,67 @@ public class Player : MonoBehaviour
     private void StateHandler()
     {
         // mode - sprinting
-        if (grounded && Input.GetKey(sprintKey)) 
+        if (grounded && Input.GetKey(sprintKey))
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
         }
-
         //mode - walking 
-        if (grounded) 
+        else if (grounded)
         {
             state = MovementState.walking;
             moveSpeed = walkSpeed;
         }
+        // mode gliding
+        else if (!grounded && !intrigger && rb.velocity.y < 0 && Input.GetKey(glideKey))
+        {
+            state = MovementState.gliding;
+            moveSpeed = glideSpeed;
+        }
 
         // Mode - Air
-        else 
+        else
         {
             state = MovementState.air;
         }
     }
 
-    void Gravity()
+    private void Gravity()
     {
-        // rb.AddForce(0, -gravity, 0);
-        rb.AddForce(Physics.gravity);
+        if(!disableGravity)
+        {
+            rb.AddForce(Physics.gravity);
+        }
     }
 
 
     private void MovePlayer()
     {
-        // On slope
+        if (grounded)
+        {
+            // On ground
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        }
+        else if (!grounded)
+        {
+            // In air
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+        }
+
         if (OnSlope() && !exitingSlope)
         {
+            // On slope
             rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
 
             if (rb.velocity.y > 0)
                 rb.AddForce(Vector3.down * 80f, ForceMode.Force);
         }
-
-        // On ground
-        if (grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-
-        // In air
-        else if (!grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
-
+        if(state == MovementState.gliding) 
+        {
+            Gliding();
+        }
         // Turn off gravity while on slope
-        rb.useGravity = !OnSlope();
+        rb.useGravity = !OnSlope() && !disableGravity;
     }
 
     private void SpeedControl()
@@ -216,6 +231,14 @@ public class Player : MonoBehaviour
         exitingSlope = false;
     }
 
+    private void Gliding()
+    {
+        exitingSlope = true;
+        rb.velocity = new Vector3(rb.velocity.x, Mathf.Max(rb.velocity.y, -1f), rb.velocity.z);
+
+        Vector3 glideDir = orientation.forward;
+        rb.AddForce(glideDir.normalized * glideSpeed * 10f, ForceMode.Force);
+    }
     private bool OnSlope()
     {
         if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.2f)) 
