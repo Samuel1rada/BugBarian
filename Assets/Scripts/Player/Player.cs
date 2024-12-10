@@ -172,21 +172,21 @@ public class Player : MonoBehaviour
         if (grounded)
         {
             // On ground
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * Time.fixedDeltaTime, ForceMode.Force);
         }
         else if (!grounded)
         {
             // In air
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier * Time.fixedDeltaTime, ForceMode.Force);
         }
 
         if (OnSlope() && !exitingSlope)
         {
             // On slope
-            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
+            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f * Time.fixedDeltaTime, ForceMode.Force);
 
             if (rb.velocity.y > 0)
-                rb.AddForce(Vector3.down * 80f, ForceMode.Force);
+                rb.AddForce(Vector3.down * 80f * Time.fixedDeltaTime, ForceMode.Force);
         }
         if(state == MovementState.gliding) 
         {
@@ -237,7 +237,7 @@ public class Player : MonoBehaviour
         rb.velocity = new Vector3(rb.velocity.x, Mathf.Max(rb.velocity.y, -1f), rb.velocity.z);
 
         Vector3 glideDir = orientation.forward;
-        rb.AddForce(glideDir.normalized * glideSpeed * 10f, ForceMode.Force);
+        rb.AddForce(glideDir.normalized * glideSpeed * 10f * Time.fixedDeltaTime, ForceMode.Force);
     }
     private bool OnSlope()
     {
